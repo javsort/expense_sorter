@@ -76,9 +76,6 @@ def main():
             og_curr = expense['Original Currency']
             partner_name = expense['Partner Name']
 
-            if partner_name == "OF":
-                continue
-
             if len(og_curr) > 0 and og_curr != "EUR":
                 print(expense)
 
