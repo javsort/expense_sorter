@@ -1,6 +1,6 @@
 import csv
 import os
-from os.path import isfile
+from os.path import isfile, exists
 import json
 import argparse
 
@@ -24,47 +24,66 @@ def review_classes(expense_dict):
     return expenseUpdatedClasses
 
 def main():
-    parser = argparse.ArgumentParser(description="Expense sorter script.")
-    parser.add_argument("-f", "--filepath", type=str, help="The name of the CSV file")
-    args = parser.parse_args()
+    #parser = argparse.ArgumentParser(description="Expense sorter script.")
+    #parser.add_argument("-f", "--filepath", type=str, help="The name of the CSV file")
+    #args = parser.parse_args()
 
+    # There are supposed to be under a folder named /data. It's not in the repo for obvious reasons
     path_to_folder = os.path.join(os.getcwd(), "data", "finance_files")
     library = os.path.join(os.getcwd(), "data", "dictionary.json")
 
-    csv_file = args.filepath
+    path_to_data = os.path.join(os.getcwd(), "data")
+    path_to_csvs = f"{path_to_data}/finance_files"
+
+    # Create and check if necessary data is present
+    if not exists(path_to_data):
+        os.mkdir(path_to_data)
+
+    if not exists(path_to_csvs):
+        os.mkdir(path_to_csvs)
+
+    if not os.listdir(path_to_csvs):
+        print(f"The folder where CSVs are pulled from is empty. Please ensure your file is here and that it follows the guidelines.\nPath: '{path_to_csvs}'")
+        return 
 
     sorted_expenses = {}
     expense_dict = {}
     new_partners_detected = False
     new_dict_partners = 0
-    
+     
+    # Load up or create library
     if isfile(library):
         with open(library, "r") as file:
             expense_dict = json.load(file)
             print(f"Loaded {len(expense_dict)} entries from the expense dictionary.")
-
     else:
         expense_dict = {}
         print("No existing expense  dictionary found. Starting fresh.")
 
+    available_csvs = []
+    for root, folder, files in os.walk(path_to_csvs):
+        for file in files:
+            full_file_path = os.path.join(root, file)
+            available_csvs.append(full_file_path)
 
-    with open(os.path.join(path_to_folder, csv_file), "r") as file:
-        reader = csv.DictReader(file)
-        
-        # Print column headers
-        print(f" {' | '.join(reader.fieldnames)} ")
-        
-        # Print rows
-        for row in reader:
-            if row["Partner Name"] in sorted_expenses:
-                sorted_expenses[row["Partner Name"]]["expenses"].append(row)
-                sorted_expenses[row["Partner Name"]]["count"] += 1
+    for csv_file in available_csvs:
+        with open(csv_file, "r") as file:
+            reader = csv.DictReader(file)
 
-            else:
-                sorted_expenses[row["Partner Name"]] = {"expenses": [row], "count": 1}
+            # Print column headers
+            print(f" {' | '.join(reader.fieldnames)} ")
 
-            printed_line = " | ".join(row.values()) 
-            #print(printed_line)
+            # Print rows
+            for row in reader:
+                if row["Partner Name"] in sorted_expenses:
+                    sorted_expenses[row["Partner Name"]]["expenses"].append(row)
+                    sorted_expenses[row["Partner Name"]]["count"] += 1
+
+                else:
+                    sorted_expenses[row["Partner Name"]] = {"expenses": [row], "count": 1}
+
+                printed_line = " | ".join(row.values()) 
+                #print(printed_line)
 
     print(f"Total unique accounts: {len(sorted_expenses)}")
     for partner, data in sorted_expenses.items():
