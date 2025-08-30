@@ -25,8 +25,8 @@ def review_classes(expense_dict):
 def main():
     print("Tryout")
 
-    path_to_folder = "/Users/javie/OneDrive/Documents/Finance"
-    library = "/Users/javie/Documents/Code_Man_Laptop/Projects/expense_sorter/references/dictionary.json"
+    path_to_folder = "/Finance"
+    library = "expense_sorter/references/dictionary.json"
 
     csv_file = "n26-2025-1.csv"
 
