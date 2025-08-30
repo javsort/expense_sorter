@@ -2,9 +2,9 @@ import csv
 import os
 from os.path import isfile, exists
 import json
-import argparse
+import datetime
 
-EXPENSE_CLASSES = ["New", "Expense", "Income", "Investment", "Savings", "Dumb Shit", "Family and Friends", "Other"]
+EXPENSE_CLASSES = ["New", "Reg Expense", "Income", "Investment", "Savings", "Dumb Shit", "Family / Friends", "Bar/Drinks", "Food/Coffee", "Subscription", "Other"]
 
 PARTNER = {
     "Name": "",
@@ -14,20 +14,90 @@ PARTNER = {
     "Charges": []
 }
 
+CHARGE = {
+    "Amount": 0,
+    "Date": "",             # Value Date
+    "Date Registered": ""   # Booking Date
+}
+
+def get_listed_exp_classes():
+    ret_str = ""
+
+    for x in range(len(EXPENSE_CLASSES)):
+        curr_class = EXPENSE_CLASSES[x]
+
+        if curr_class == EXPENSE_CLASSES[0]:
+            continue
+
+        ret_str += f" {x} - {curr_class} \n"
+
+    ret_str = f" 0 - Skip \n{ret_str}"
+
+    return ret_str
+
+def summarize_partner(partner):
+    partner_str = ""
+
+    return partner_str
+
 def review_classes(expense_dict):
+
+    print(f"\n\nWe detected some new unclassified partners, please review: \n")
     expenseUpdatedClasses = expense_dict
 
     for key, data in expense_dict.items():
         if data['Expense Class'] == EXPENSE_CLASSES[0]:
-            print(f"gotta change it!")
+            while True:
+                print(summarize_partner(data))
+                print(f"We detected the partner: '{key}' hasn't been set an expense class. Please choose one out of the following:\n{get_listed_exp_classes()}")
+                chosen_class = input()
+
+                print(f"Chosen class selected: {chosen_class}")
+
+                match chosen_class:
+                    case "0":      # Skip
+                        print(f"Skiping... \n")
+                        break
+                    case "1":       # Regular Expense
+                        data["Expense Class"] = EXPENSE_CLASSES[1]
+                        break
+                    case "2":       # Income
+                        data["Expense Class"] = EXPENSE_CLASSES[2]
+                        break
+                    case "3":       # Investment
+                        data["Expense Class"] = EXPENSE_CLASSES[3]
+                        break
+                    case "4":       # Savings
+                        data["Expense Class"] = EXPENSE_CLASSES[4]
+                        break
+                    case "5":       # Dumb Shit
+                        data["Expense Class"] = EXPENSE_CLASSES[5]
+                        break
+                    case "6":       # Fam / Friends
+                        data["Expense Class"] = EXPENSE_CLASSES[6]
+                        break
+                    case "7":       # Bar
+                        data["Expense Class"] = EXPENSE_CLASSES[7]
+                        break
+                    case "8":       # Food
+                        data["Expense Class"] = EXPENSE_CLASSES[8]
+                        break
+                    case "9":       # Food
+                        data["Expense Class"] = EXPENSE_CLASSES[9]
+                        break
+                    case "10":       # Other
+                        data["Expense Class"] = EXPENSE_CLASSES[10]
+                        break
+                    case _:
+                        print(f"Please choose a valid class.")
+                        continue
+                
+            print(f"Expense Class updated successfully :)")
+
 
     return expenseUpdatedClasses
 
 def main():
-    #parser = argparse.ArgumentParser(description="Expense sorter script.")
-    #parser.add_argument("-f", "--filepath", type=str, help="The name of the CSV file")
-    #args = parser.parse_args()
-
     # There are supposed to be under a folder named /data. It's not in the repo for obvious reasons
     path_to_folder = os.path.join(os.getcwd(), "data", "finance_files")
     library = os.path.join(os.getcwd(), "data", "dictionary.json")
@@ -95,18 +165,22 @@ def main():
 
             expense_dict[partner]["Name"] = partner
 
+            partners_grouped_expenses = []
+
             for expense in data['expenses']:
-                og_curr = expense['Original Currency']
-                partner_name = expense['Partner Name']
+                this_charge = CHARGE.copy()
+                this_charge['Date'] = expense['Value Date']
+                this_charge['Date Registered'] = expense['Booking Date']
+                this_charge['Amount'] = expense['Amount (EUR)']
 
-                #print(f"Expense: {expense}")
+                partners_grouped_expenses.append(this_charge)
 
-
-            expense_dict[partner]["Charges"] = [expense["Amount (EUR)"] for expense in data["expenses"]]
-
+            expense_dict[partner]["Charges"] = partners_grouped_expenses
             #print(f"Partner: {partner}, Count: {data['count']}")
 
         print(f"New partners added to dictionary: {new_dict_partners}")
+
+    print(f"{json.dumps(expense_dict, indent=4)}")
 
     # Ensure the directory for the library file exists
     os.makedirs(os.path.dirname(library), exist_ok=True)
