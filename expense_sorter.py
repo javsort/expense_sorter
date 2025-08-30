@@ -46,7 +46,6 @@ def main():
         print(f"The folder where CSVs are pulled from is empty. Please ensure your file is here and that it follows the guidelines.\nPath: '{path_to_csvs}'")
         return 
 
-    sorted_expenses = {}
     expense_dict = {}
     new_partners_detected = False
     new_dict_partners = 0
@@ -60,55 +59,54 @@ def main():
         expense_dict = {}
         print("No existing expense  dictionary found. Starting fresh.")
 
+    # Walk the folder and get all available files
     available_csvs = []
     for root, folder, files in os.walk(path_to_csvs):
         for file in files:
             full_file_path = os.path.join(root, file)
             available_csvs.append(full_file_path)
 
+    # Go over each csv
     for csv_file in available_csvs:
+        sorted_expenses = {}
+    
         with open(csv_file, "r") as file:
             reader = csv.DictReader(file)
 
             # Print column headers
             print(f" {' | '.join(reader.fieldnames)} ")
 
-            # Print rows
+            # Start sorting rows based on the partner name
             for row in reader:
                 if row["Partner Name"] in sorted_expenses:
-                    sorted_expenses[row["Partner Name"]]["expenses"].append(row)
                     sorted_expenses[row["Partner Name"]]["count"] += 1
-
+                    sorted_expenses[row["Partner Name"]]["expenses"].append(row)
                 else:
-                    sorted_expenses[row["Partner Name"]] = {"expenses": [row], "count": 1}
+                    sorted_expenses[row["Partner Name"]] = {"count": 1, "expenses": [row]}
 
-                printed_line = " | ".join(row.values()) 
-                #print(printed_line)
+        print(f"Total unique accounts: {len(sorted_expenses)}")
+        # After the csv is read, compare to dictionary to check if already there or not:
+        for partner, data in sorted_expenses.items():
+            print(f"\n - Partner: {partner}\nData:{data}")
 
-    print(f"Total unique accounts: {len(sorted_expenses)}")
-    for partner, data in sorted_expenses.items():
+            if partner not in expense_dict:
+                new_partners_detected = True
+                expense_dict[partner] = PARTNER.copy()
 
-        if partner not in expense_dict:
-            new_partners_detected = True
-            expense_dict[partner] = PARTNER.copy()
+            expense_dict[partner]["Name"] = partner
 
-        expense_dict[partner]["Name"] = partner
+            for expense in data['expenses']:
+                og_curr = expense['Original Currency']
+                partner_name = expense['Partner Name']
 
-        for expense in data['expenses']:
-            og_curr = expense['Original Currency']
-            partner_name = expense['Partner Name']
-
-            if len(og_curr) > 0 and og_curr != "EUR":
-                print(expense)
-
-            #print(f"Expense: {expense}")
+                #print(f"Expense: {expense}")
 
 
-        expense_dict[partner]["Charges"] = [expense["Amount (EUR)"] for expense in data["expenses"]]
+            expense_dict[partner]["Charges"] = [expense["Amount (EUR)"] for expense in data["expenses"]]
 
-        #print(f"Partner: {partner}, Count: {data['count']}")
+            #print(f"Partner: {partner}, Count: {data['count']}")
 
-    print(f"New partners added to dictionary: {new_dict_partners}")
+        print(f"New partners added to dictionary: {new_dict_partners}")
 
     # Ensure the directory for the library file exists
     os.makedirs(os.path.dirname(library), exist_ok=True)
