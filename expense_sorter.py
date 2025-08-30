@@ -2,6 +2,7 @@ import csv
 import os
 from os.path import isfile
 import json
+import argparse
 
 EXPENSE_CLASSES = ["New", "Expense", "Income", "Investment", "Savings", "Dumb Shit", "Family and Friends", "Other"]
 
@@ -23,12 +24,14 @@ def review_classes(expense_dict):
     return expenseUpdatedClasses
 
 def main():
-    print("Tryout")
+    parser = argparse.ArgumentParser(description="Expense sorter script.")
+    parser.add_argument("-f", "--filepath", type=str, help="The name of the CSV file")
+    args = parser.parse_args()
 
-    path_to_folder = "/Finance"
-    library = "expense_sorter/references/dictionary.json"
+    path_to_folder = os.path.join(os.getcwd(), "data", "finance_files")
+    library = os.path.join(os.getcwd(), "data", "dictionary.json")
 
-    csv_file = "n26-2025-1.csv"
+    csv_file = args.filepath
 
     sorted_expenses = {}
     expense_dict = {}
@@ -42,14 +45,14 @@ def main():
 
     else:
         expense_dict = {}
-        print("No existing expense dictionary found. Starting fresh.")
+        print("No existing expense  dictionary found. Starting fresh.")
 
 
     with open(os.path.join(path_to_folder, csv_file), "r") as file:
         reader = csv.DictReader(file)
         
         # Print column headers
-        print(f" '{"' | '".join(reader.fieldnames)}' ")
+        print(f" {' | '.join(reader.fieldnames)} ")
         
         # Print rows
         for row in reader:
@@ -91,7 +94,7 @@ def main():
     # Ensure the directory for the library file exists
     os.makedirs(os.path.dirname(library), exist_ok=True)
 
-    if new_partners_detected:
+    if new_partners_detected and len(expense_dict) > 0:
         expense_dict = review_classes(expense_dict)
     
     # Store back dictionary
